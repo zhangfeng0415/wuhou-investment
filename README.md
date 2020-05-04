@@ -49,11 +49,11 @@
 
 > 使用前请先配置本项目需要的所有环境（包括maven一键部署方案，详见`参考学习文档`）
 
-1. 本地新建数据库`website`导入`sql`目录下的文件(采用UTF-8编码)
+1. 本地新建数据库`wuhou`导入`sql`目录下的文件(采用UTF-8编码)
 2. 修改数据库配置文件`src/main/resources/jdbc.properties`(JDBC驱动包位置和数据库连接的用户名密码)
 3. 运行`mvn tomcat7:deploy`或者`mvn tomcat7:redeploy`部署
-4. 访问`ip:port/education-website/`即可访问系统
-5. 访问`ip:port/education-website/swagger/index.html`即可查看系统所有的接口
+4. 访问`ip:port/wuhou-investment/`即可访问系统
+5. 访问`ip:port/wuhou-investment/swagger/index.html`即可查看系统所有的接口
  
 ### 编码约定
 
