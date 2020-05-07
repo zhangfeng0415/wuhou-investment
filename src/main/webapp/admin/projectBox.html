@@ -34,8 +34,9 @@
     </div>
 </nav>
 <div style="width: 1200px;margin:50px auto 20px;">
-    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#add">添加工程档案盒</button>
+    <button type="button" class="btn btn-primary" id="add-box">添加工程档案盒</button>
     <button type="button" class="btn btn-danger" id="bk-modal">档案备份</button>
+    <button type="button" class="btn btn-success"  id="import-modal">档案导入</button>
     <!--    <button style="float: right" type="button" class="btn btn-primary" onclick="location.href='../admin/officialDocument/export'">导出为Excel</button>-->
     <div style="width:305px;float:right">
         <select id="query" class="selectpicker show-tick" data-width="100px" style="display: inline-block">
@@ -54,12 +55,35 @@
 
 <!-- Modal -->
 
-<div id="loading"><img src="../image/waiting.gif" alt=""/>文件备份中,请稍候...</div>
+<div id="loading"><img src="../image/waiting.gif" alt=""/>后台处理中,请稍候...</div>
+
+<div class="modal fade" id="import" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">项目导入</h4>
+            </div>
+            <div align="center" class="modal-body">
+                <input id="projectNameForImport" type="text" class="form-control" placeholder="请输入项目名称"/>
+                <input id="import-path" type="text" class="form-control" placeholder="请输入项目文件夹路径"/>
+                <div class="modal-footer" style="margin-top: 20px">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button id="for-import" type="button" class="btn btn-success">确认导入</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <div class="modal fade" id="backup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
     <div class="modal-dialog" role="document" style="width: 60%">
         <div class="modal-content">
             <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
                 <h4 class="modal-title">一键备份工程档案</h4>
             </div>
             <div align="center" class="modal-body">

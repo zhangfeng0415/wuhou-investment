@@ -1,10 +1,15 @@
 $(document).ready(function () {
     let reg = /windows/i;
     if (reg.test(navigator.userAgent)) {
-        $('#forBackup').prop('disabled', true);
-        $('#forBackup').hide();
-        $('#bk-modal').hide();
-        $('#bk-modal').prop('disabled',true);
+        let backup = $('#forBackup'),bm=$('#bk-modal'),im=$('#import-modal'),fi=$('#for-import');
+        backup.prop('disabled', true);
+        backup.hide();
+        bm.hide();
+        bm.prop('disabled',true);
+        im.hide();
+        im.prop('disabled',true);
+        fi.prop('disabled',true);
+        fi.hide();
     }
     $('#table').bootstrapTable({
         url: '../admin/officialBox/select',
@@ -64,6 +69,15 @@ $('#bk-modal').click(function () {
     $('#backup').modal({backdrop: 'static', keyboard: false});
 })
 
+$('#import-modal').click(function () {
+    $('#import').modal({backdrop: 'static', keyboard: false});
+})
+
+$('#add-box').click(function () {
+    $('#add').modal({backdrop: 'static', keyboard: false});
+})
+
+
 $('#forBackup').click(function () {
     let filepath = $('#path').val();
     if (filepath) {
@@ -93,6 +107,39 @@ $('#forBackup').click(function () {
         alert("请填写备份路径！")
     }
 })
+
+$('#for-import').click(function () {
+    let filepath = $('#import-path').val();
+    if (filepath) {
+        $.ajax({
+            type: 'post',
+            url: '../admin/officialDocument/import',
+            data: {'importPath': filepath},
+            beforeSend: function () {
+                ShowDiv();
+            },
+            complete: function () {
+                HiddenDiv();
+            },
+            success: function (data) {
+                if (data.code == 0) {
+                    alert(data.message);
+                    $('#import').modal('hide');
+                    $('#import-path').val('');
+                }
+                else {
+                    alert(data.message);
+                }
+            }
+        })
+    }
+    else {
+        alert("请填写文件夹路径！")
+    }
+})
+
+
+
 //显示加载数据
 function ShowDiv() {
     $("#loading").show();
