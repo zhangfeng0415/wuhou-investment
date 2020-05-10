@@ -1,10 +1,15 @@
 $(document).ready(function () {
     let reg = /windows/i;
     if (reg.test(navigator.userAgent)) {
-        $('#forBackup').prop('disabled', true);
-        $('#forBackup').hide();
-        $('#bk-modal').hide();
-        $('#bk-modal').prop('disabled',true);
+        let backup = $('#forBackup'),bm=$('#bk-modal'),im=$('#import-modal'),fi=$('#for-import');
+        backup.prop('disabled', true);
+        backup.hide();
+        bm.hide();
+        bm.prop('disabled',true);
+        im.hide();
+        im.prop('disabled',true);
+        fi.prop('disabled',true);
+        fi.hide();
     }
     $('#table').bootstrapTable({
         url: '../admin/projectBox/select',
@@ -66,6 +71,18 @@ $(document).ready(function () {
                 formatter: operateFormatter
             }]
     });
+})
+
+$('#bk-modal').click(function () {
+    $('#backup').modal({backdrop: 'static', keyboard: false});
+})
+
+$('#import-modal').click(function () {
+    $('#import').modal({backdrop: 'static', keyboard: false});
+})
+
+$('#add-box').click(function () {
+    $('#add').modal({backdrop: 'static', keyboard: false});
 })
 
 $('#forBackup').click(function () {
@@ -288,6 +305,37 @@ function HiddenDiv() {
     $("#loading").hide();
     $('button').prop('disabled', false)
 }
+
+$('#for-import').click(function () {
+    let filepath = $('#import-path').val(),name=$('#projectNameForImport').val();
+    if (filepath && name) {
+        $.ajax({
+            type: 'post',
+            url: '../admin/projectDocument/import',
+            data: {'importPath': filepath,'projectName':name},
+            beforeSend: function () {
+                ShowDiv();
+            },
+            complete: function () {
+                HiddenDiv();
+            },
+            success: function (data) {
+                if (data.code == 0) {
+                    alert(data.message);
+                    $('#import').modal('hide');
+                    $('#import-path').val('');
+                    $('#projectNameForImport').val('');
+                }
+                else {
+                    alert(data.message);
+                }
+            }
+        })
+    }
+    else {
+        alert("请补全信息！")
+    }
+})
 
 $('#addBox').click(function () {
     var projectName = $('#projectName').val();
