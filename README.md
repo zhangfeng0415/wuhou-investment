@@ -5,7 +5,7 @@
 本项目是一个集成了spring MVC + mybatis 。
 
 - 开发环境：
-	- `JDK`: `1.8.0_11`
+	- `JDK`: `1.8.0_151`
 	- `Maven`: `Apache Maven 3.3.9`
 	- `Tomcat`: `Tomcat8`
 	- `Database`: `MySQL 5.5`

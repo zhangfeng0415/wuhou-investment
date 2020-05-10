@@ -2,6 +2,8 @@ package edu.uestc.cilab.entity.vo;
 
 import io.swagger.annotations.ApiModelProperty;
 
+import java.util.Objects;
+
 /**
  * @author: zhangfeng
  * @date: 2019-05-31 15:54
@@ -105,5 +107,39 @@ public class OfficialDocumentOutputExcelVo {
 
     public void setPageNumber(String pageNumber) {
         this.pageNumber = pageNumber;
+    }
+
+    @Override
+    public String toString() {
+        return "OfficialDocumentOutputExcelVo{" +
+                "fileName='" + fileName + '\'' +
+                ", id=" + id +
+                ", box_number='" + box_number + '\'' +
+                ", number='" + number + '\'' +
+                ", responsiblePerson='" + responsiblePerson + '\'' +
+                ", title='" + title + '\'' +
+                ", documentTime='" + documentTime + '\'' +
+                ", pageNumber='" + pageNumber + '\'' +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        OfficialDocumentOutputExcelVo that = (OfficialDocumentOutputExcelVo) o;
+        return fileName.equals(that.fileName) &&
+                id.equals(that.id) &&
+                box_number.equals(that.box_number) &&
+                number.equals(that.number) &&
+                responsiblePerson.equals(that.responsiblePerson) &&
+                title.equals(that.title) &&
+                documentTime.equals(that.documentTime) &&
+                pageNumber.equals(that.pageNumber);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(fileName, id, box_number, number, responsiblePerson, title, documentTime, pageNumber);
     }
 }

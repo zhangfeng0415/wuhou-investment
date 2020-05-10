@@ -156,4 +156,10 @@ public interface OfficialDocumentMapper {
             "update official_document SET box_number = #{boxNumber, jdbcType=VARCHAR} WHERE official_box_id = #{officialBoxId, jdbcType=INTEGER} "
     })
     int updateBoxNumberByOfficialBoxId(@Param("officialBoxId")Integer officialBoxId,@Param("boxNumber")String boxNumber);
+
+    @Select({
+            "SELECT id FROM official_document WHERE official_box_id = #{officialBoxId, jdbcType=INTEGER} ",
+            " AND number = #{number, jdbcType=VARCHAR} AND title = #{title, jdbcType=VARCHAR}  "
+    })
+    int findIdByBoxIdNumberTitle(@Param("officialBoxId")Integer officialBoxId, @Param("number")String number, @Param("title")String title);
 }

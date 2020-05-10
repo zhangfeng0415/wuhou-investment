@@ -1,9 +1,11 @@
 package edu.uestc.cilab.controller;
 
+import com.alibaba.excel.EasyExcel;
 import edu.uestc.cilab.constant.PageConstant;
 import edu.uestc.cilab.constant.ResponseConstant;
 import edu.uestc.cilab.constant.SortConstant;
 import edu.uestc.cilab.entity.OfficialBox;
+import edu.uestc.cilab.entity.OfficialBoxExample;
 import edu.uestc.cilab.entity.OfficialContent;
 import edu.uestc.cilab.entity.OfficialDocument;
 import edu.uestc.cilab.entity.vo.OfficialDocumentExcelVo;
@@ -14,6 +16,7 @@ import edu.uestc.cilab.repository.OfficialContentMapper;
 import edu.uestc.cilab.repository.OfficialDocumentMapper;
 import edu.uestc.cilab.service.OfficialDocumentService;
 import edu.uestc.cilab.util.ExportExcel;
+import edu.uestc.cilab.util.FileCopyUtil;
 import edu.uestc.cilab.util.PageUtil;
 import edu.uestc.cilab.util.ResultUtil;
 import io.swagger.annotations.ApiOperation;
@@ -22,6 +25,7 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
@@ -42,6 +46,10 @@ import java.util.stream.Collectors;
  */
 @Controller
 public class OfficialDocumentController {
+
+    @Value("#{configProperties['jdbc.officialDocument.image.path']}")
+    String officialDocumentImagePath;
+
     Logger logger = LoggerFactory.getLogger(OfficialDocumentController.class);
     @Autowired
     OfficialDocumentService officialDocumentService;
@@ -222,4 +230,94 @@ public class OfficialDocumentController {
         return new ResultUtil(ResponseConstant.ResponseCode.SUCCESS,"备份成功",null);
     }
 
+    @RequestMapping(value = {"/admin/officialDocument/import", "/user/officialDocument/backups"}, method = RequestMethod.POST)
+    @ResponseBody
+    @ApiOperation("一键导入所有文书档案")
+    public ResultUtil importOfficialDocument(@ApiParam("导入文件的路径") @RequestParam(required = true) String importPath) {
+
+        File sourceFiles = new File(importPath);
+        // 源文件夹不存在
+        if (!sourceFiles.exists()) {
+            return new ResultUtil(ResponseConstant.ResponseCode.FAILURE,"你指定的文件夹路径不存在",null);
+        }
+
+//        获取文书档案盒列表
+        File[] officialBoxFileLists = sourceFiles.listFiles();
+//        检查是否存在不合要求的文件夹
+        for (File officialBoxFile: officialBoxFileLists){
+            if (!officialBoxFile.getName().contains("档号")){
+                return new ResultUtil(ResponseConstant.ResponseCode.FAILURE,"存在不合要求的文件夹（没有包含档号二字），请检查路径是否正确",null);
+            }
+        }
+        for (File officialBoxFile: officialBoxFileLists) {
+//            文书档案某盒 的文件夹路径
+            String officialDocumentPath =importPath + File.separator + officialBoxFile.getName();
+//            获取档号
+            String boxNumber = officialBoxFile.getName().replace("档号", "");
+
+//            获取excel的路径
+            String officialDocumentExcel = officialDocumentPath + File.separator + "文件列表.xlsx";
+//            获取档案盒中 文件 列表
+            File[] officialDocumentFiles = officialBoxFile.listFiles();
+//            获取Excel文件中各个条目的数据List
+            List<OfficialDocumentOutputExcelVo> officialDocumentOutputExcelVoList = EasyExcel.
+                    read(officialDocumentExcel, OfficialDocumentOutputExcelVo.class, null).sheet().doReadSync();
+//            查询档号， 判断档号是否存在，不存在则创建文书档案盒数据
+            OfficialBoxExample example = new OfficialBoxExample();
+            example.or().andBoxNumberEqualTo(boxNumber);
+            if (0 == officialBoxMapper.countByExample(example)){
+//                不存在则创建
+                OfficialBox officialBox = new OfficialBox();
+                officialBox.setBoxNumber(boxNumber);
+                officialBox.setTotalNumber(officialDocumentOutputExcelVoList.size());
+                officialBoxMapper.insertSelective(officialBox);
+            }else {
+//                默认是整盒导入导出。存在则直接跳过
+                continue;
+            }
+//            获取盒号id
+            int officialBoxId = officialBoxMapper.findIdByBoxNumber(boxNumber);
+            for (OfficialDocumentOutputExcelVo officialDocumentOutputExcelVo : officialDocumentOutputExcelVoList) {
+//                循环创建officialDocument，并复制图片到指定地点
+                OfficialDocument officialDocument = new OfficialDocument();
+                officialDocument.setOfficialBoxId(officialBoxId);
+                officialDocument.setBoxNumber(boxNumber);
+                officialDocument.setNumber(officialDocumentOutputExcelVo.getNumber());
+                officialDocument.setTitle(officialDocumentOutputExcelVo.getTitle());
+                officialDocument.setPageNumber(officialDocumentOutputExcelVo.getPageNumber());
+                officialDocument.setResponsiblePerson(officialDocumentOutputExcelVo.getResponsiblePerson());
+                officialDocument.setKeepTime("永久");
+                officialDocument.setDocumentTime(officialDocumentOutputExcelVo.getDocumentTime());
+                officialDocument.setCreateUserName("录入员");
+//                插入officialDocument数据
+                officialDocumentMapper.insertSelective(officialDocument);
+//                取出officialDocument的id
+                int officialDocumentId = officialDocumentMapper.findIdByBoxIdNumberTitle(officialBoxId,
+                        officialDocumentOutputExcelVo.getNumber(), officialDocumentOutputExcelVo.getTitle());
+//                找到对应的文件夹，将里面的图片复制到指定的文件夹，并创建对应content
+//                创建序号变量，用于查找对应文件夹
+                String xuHao = officialDocumentOutputExcelVo.getId().toString();
+                for (File officialDocumentFile:officialDocumentFiles){
+//                    包含序号则说明，是对应文件夹，并做相应处理
+                    if (officialDocumentFile.getName().contains(xuHao)){
+                        String oldFilePath = officialDocumentFile.getPath();
+                        String newFilePath = officialDocumentImagePath.substring(0, officialDocumentImagePath.length() - 1);
+//                        获取返回图片list
+                        List<String> imageFilePathList = FileCopyUtil.copyFileToNewFile(oldFilePath, newFilePath);
+                        for (String imageFilePath : imageFilePathList ){
+//                            插入对应图片数据
+                            OfficialContent officialContent = new OfficialContent();
+                            officialContent.setOfficialDocumentId(officialDocumentId);
+                            officialContent.setContentAddress(imageFilePath);
+                            officialContentMapper.insertSelective(officialContent);
+                        }
+//                     否则跳过该文件夹
+                    }else {
+                        continue;
+                    }
+                }
+            }
+        }
+        return new ResultUtil(ResponseConstant.ResponseCode.SUCCESS,"导入成功",null);
+    }
 }

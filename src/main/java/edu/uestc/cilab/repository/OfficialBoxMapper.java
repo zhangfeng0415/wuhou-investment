@@ -1,4 +1,5 @@
 package edu.uestc.cilab.repository;
+import	java.security.Provider.Service;
 
 import edu.uestc.cilab.entity.OfficialBox;
 import edu.uestc.cilab.entity.OfficialBoxExample;
@@ -127,4 +128,9 @@ public interface OfficialBoxMapper {
     })
     @ResultMap("BaseResultMap")
     List<OfficialBox> getNumberList ();
+
+    @Select({
+            "SELECT id FROM official_box where box_number = #{boxNumber,jdbcType=VARCHAR} "
+    })
+    int findIdByBoxNumber (@Param("boxNumber") String boxNumber);
 }
