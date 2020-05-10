@@ -1,9 +1,11 @@
 package edu.uestc.cilab.controller;
 
+import com.alibaba.excel.EasyExcel;
 import edu.uestc.cilab.constant.PageConstant;
 import edu.uestc.cilab.constant.ResponseConstant;
 import edu.uestc.cilab.constant.SortConstant;
 import edu.uestc.cilab.entity.ProjectBox;
+import edu.uestc.cilab.entity.ProjectBoxExample;
 import edu.uestc.cilab.entity.ProjectContent;
 import edu.uestc.cilab.entity.ProjectDocument;
 import edu.uestc.cilab.entity.vo.ProjectDocumentExcelVo;
@@ -14,6 +16,7 @@ import edu.uestc.cilab.repository.ProjectContentMapper;
 import edu.uestc.cilab.repository.ProjectDocumentMapper;
 import edu.uestc.cilab.service.ProjectDocumentService;
 import edu.uestc.cilab.util.ExportExcel;
+import edu.uestc.cilab.util.FileCopyUtil;
 import edu.uestc.cilab.util.PageUtil;
 import edu.uestc.cilab.util.ResultUtil;
 import io.swagger.annotations.ApiOperation;
@@ -23,6 +26,7 @@ import org.apache.ibatis.annotations.Param;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
@@ -43,10 +47,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Created by zhangfeng on 2018/1/15.
+ * ipdate by zhangfeng on 2020/5/10
+ * @author  zhangfeng
  */
 @Controller
 public class ProjectDocumentController {
+    @Value("#{configProperties['jdbc.projectDocument.image.path']}")
+    String projectDocumentImagePath;
+
     Logger logger = LoggerFactory.getLogger(ProjectDocumentController.class);
     @Autowired
     ProjectDocumentService projectDocumentService;
@@ -253,4 +261,100 @@ public class ProjectDocumentController {
 
         return new ResultUtil(ResponseConstant.ResponseCode.SUCCESS,"备份成功",null);
     }
+
+    @RequestMapping(value = {"/admin/projectDocument/import"}, method = RequestMethod.POST)
+    @ResponseBody
+    @ApiOperation("一键导入指定项目名称的工程文件")
+    public ResultUtil importProjectDocument(@ApiParam("项目名称") @RequestParam(required = true) String projectName,
+                                            @ApiParam("导入文件的路径") @RequestParam(required = true) String importPath){
+        File sourceFiles = new File(importPath);
+        // 源文件夹不存在
+        if (!sourceFiles.exists()) {
+            return new ResultUtil(ResponseConstant.ResponseCode.FAILURE,"你指定的文件夹路径不存在",null);
+        }
+//        判断项目名称与路径是否符合
+        if (!importPath.contains(projectName)){
+            return new ResultUtil(ResponseConstant.ResponseCode.FAILURE,"项目名称与路径不匹配，请检查！",null);
+        }
+
+        //        获取工程档案盒列表
+        File[] projectBoxFileLists = sourceFiles.listFiles();
+//        检查是否存在不合要求的文件夹
+        for (File projectBoxFile: projectBoxFileLists){
+            if (!projectBoxFile.getName().contains("档号")){
+                return new ResultUtil(ResponseConstant.ResponseCode.FAILURE,"存在不合要求的文件夹（没有包含档号二字），请检查路径是否正确",null);
+            }
+        }
+        for (File projectBoxFile: projectBoxFileLists) {
+//            工程档案某盒 的文件夹路径
+            String projectDocumentPath =importPath + File.separator + projectBoxFile.getName();
+//            获取档号
+            String boxNumber = projectBoxFile.getName().replace("档号", "");
+
+//            获取excel的路径
+            String projectDocumentExcel = projectDocumentPath + File.separator + "文件列表.xlsx";
+//            获取工程档案盒中 的文件列表
+            File[] projectDocumentFiles = projectBoxFile.listFiles();
+//            获取Excel文件中各个条目的数据List
+            List<ProjectDocumentOutputExcelVo> projectDocumentOutputExcelVoList = EasyExcel.
+                    read(projectDocumentExcel, ProjectDocumentOutputExcelVo.class, null).sheet().doReadSync();
+//            查询档号， 判断档号是否存在，不存在则创建工程档案盒数据
+            if (0 == projectBoxMapper.getSameNumber(projectName, boxNumber)){
+//                不存在则创建
+                ProjectBox projectBox = new ProjectBox();
+                projectBox.setProjectName(projectName);
+                projectBox.setBoxNumber(boxNumber);
+                projectBox.setTotalNumber(projectDocumentOutputExcelVoList.size());
+                projectBoxMapper.insertSelective(projectBox);
+            }else {
+//                存在则跳过
+                continue;
+            }
+//            获取盒号id
+            int projectBoxId = projectBoxMapper.findIdByProjectNameBoxNumber(projectName, boxNumber);
+            for (ProjectDocumentOutputExcelVo projectDocumentOutputExcelVo : projectDocumentOutputExcelVoList){
+//                循环创建officialDocument，并复制图片到指定地点
+                ProjectDocument projectDocument = new ProjectDocument();
+                projectDocument.setProjectBoxId(projectBoxId);
+                projectDocument.setBoxNumber(boxNumber);
+                projectDocument.setNumber(projectDocumentOutputExcelVo.getNumber());
+                projectDocument.setTitle(projectDocumentOutputExcelVo.getTitle());
+                projectDocument.setPageNumber(projectDocumentOutputExcelVo.getPageNumber());
+                projectDocument.setResponsiblePerson(projectDocumentOutputExcelVo.getResponsiblePerson());
+                projectDocument.setKeepTime("永久");
+                projectDocument.setDocumentTime(projectDocumentOutputExcelVo.getDocumentTime());
+                projectDocument.setCreateUserName("录入员");
+//                插入数据
+                projectDocumentMapper.insertSelective(projectDocument);
+//                取出projectDocument的id
+                int pprojectDocumentId = projectDocumentMapper.findIdByBoxIdNumberTitle(projectBoxId,
+                        projectDocumentOutputExcelVo.getNumber(), projectDocumentOutputExcelVo.getTitle());
+//                找到对应的文件夹，将里面的图片复制到指定的文件夹，并创建对应content
+//                创建序号变量，用于查找对应文件夹
+                String xuHao = projectDocumentOutputExcelVo.getId().toString();
+                for (File projecDocumentFile : projectDocumentFiles){
+//                    包含序号则说明，是对应文件夹，并做相应处理
+                    if (projecDocumentFile.getName().contains(xuHao)){
+                        String oldFilePath = projecDocumentFile.getPath();
+                        String newFilePath = projectDocumentImagePath.substring(0, projectDocumentImagePath.length() - 1);
+//                        获取返回图片list
+                        List<String> imageFilePathList = FileCopyUtil.copyFileToNewFile(oldFilePath, newFilePath);
+                        for (String imageFilePath : imageFilePathList ){
+//                            插入对应图片数据
+                            ProjectContent projectContent = new ProjectContent();
+                            projectContent.setProjectDocumentId(pprojectDocumentId);
+                            projectContent.setContentAddress(imageFilePath);
+                            projectContentMapper.insertSelective(projectContent);
+                        }
+//                     否则跳过该文件夹
+                    }else {
+                        continue;
+                    }
+                }
+            }
+        }
+
+        return new ResultUtil(ResponseConstant.ResponseCode.SUCCESS,"导入成功",null);
+    }
+
 }

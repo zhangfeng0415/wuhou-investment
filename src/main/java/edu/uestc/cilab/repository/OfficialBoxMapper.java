@@ -132,5 +132,5 @@ public interface OfficialBoxMapper {
     @Select({
             "SELECT id FROM official_box where box_number = #{boxNumber,jdbcType=VARCHAR} "
     })
-    int findIdByBoxNumber (@Param("boxNumber") String boxNumber);
+    Integer findIdByBoxNumber (@Param("boxNumber") String boxNumber);
 }

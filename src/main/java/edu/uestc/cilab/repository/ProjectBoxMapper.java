@@ -156,4 +156,9 @@ public interface ProjectBoxMapper {
     })
     @ResultMap("BaseResultMap")
     List<ProjectBox> getBoxNumberList (String projectName);
+
+    @Select({
+            "SELECT id FROM project_box where project_name = #{projectName, jdbcType=VARCHAR} and box_number = #{boxNumber,jdbcType=VARCHAR}  "
+    })
+    Integer findIdByProjectNameBoxNumber (@Param("projectName") String projectName, @Param("boxNumber") String boxNumber);
 }

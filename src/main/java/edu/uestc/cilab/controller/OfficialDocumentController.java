@@ -230,7 +230,7 @@ public class OfficialDocumentController {
         return new ResultUtil(ResponseConstant.ResponseCode.SUCCESS,"备份成功",null);
     }
 
-    @RequestMapping(value = {"/admin/officialDocument/import", "/user/officialDocument/backups"}, method = RequestMethod.POST)
+    @RequestMapping(value = {"/admin/officialDocument/import"}, method = RequestMethod.POST)
     @ResponseBody
     @ApiOperation("一键导入所有文书档案")
     public ResultUtil importOfficialDocument(@ApiParam("导入文件的路径") @RequestParam(required = true) String importPath) {
