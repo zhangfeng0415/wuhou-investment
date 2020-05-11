@@ -322,6 +322,7 @@ $('#for-import').click(function () {
             success: function (data) {
                 if (data.code == 0) {
                     alert(data.message);
+                    $('#table').bootstrapTable('refresh');
                     $('#import').modal('hide');
                     $('#import-path').val('');
                     $('#projectNameForImport').val('');
