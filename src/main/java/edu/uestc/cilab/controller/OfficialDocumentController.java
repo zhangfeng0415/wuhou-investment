@@ -282,8 +282,20 @@ public class OfficialDocumentController {
                 OfficialDocument officialDocument = new OfficialDocument();
                 officialDocument.setOfficialBoxId(officialBoxId);
                 officialDocument.setBoxNumber(boxNumber);
-                officialDocument.setNumber(officialDocumentOutputExcelVo.getNumber());
-                officialDocument.setTitle(officialDocumentOutputExcelVo.getTitle());
+                String number = officialDocumentOutputExcelVo.getNumber();
+                if (number == null || number.length() == 0){
+                    number = "/";
+                    officialDocument.setNumber(number);
+                }else {
+                    officialDocument.setNumber(number);
+                }
+                String title = officialDocumentOutputExcelVo.getTitle();
+                if (title == null || title.length() == 0){
+                    title = "/";
+                    officialDocument.setTitle(title);
+                } else {
+                    officialDocument.setTitle(title);
+                }
                 officialDocument.setPageNumber(officialDocumentOutputExcelVo.getPageNumber());
                 officialDocument.setResponsiblePerson(officialDocumentOutputExcelVo.getResponsiblePerson());
                 officialDocument.setKeepTime("永久");
@@ -292,8 +304,7 @@ public class OfficialDocumentController {
 //                插入officialDocument数据
                 officialDocumentMapper.insertSelective(officialDocument);
 //                取出officialDocument的id
-                int officialDocumentId = officialDocumentMapper.findIdByBoxIdNumberTitle(officialBoxId,
-                        officialDocumentOutputExcelVo.getNumber(), officialDocumentOutputExcelVo.getTitle());
+                int officialDocumentId = officialDocumentMapper.findIdByBoxIdNumberTitle(officialBoxId, number, title);
 //                找到对应的文件夹，将里面的图片复制到指定的文件夹，并创建对应content
 //                创建序号变量，用于查找对应文件夹
                 String xuHao = officialDocumentOutputExcelVo.getId().toString();

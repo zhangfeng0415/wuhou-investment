@@ -317,8 +317,22 @@ public class ProjectDocumentController {
                 ProjectDocument projectDocument = new ProjectDocument();
                 projectDocument.setProjectBoxId(projectBoxId);
                 projectDocument.setBoxNumber(boxNumber);
-                projectDocument.setNumber(projectDocumentOutputExcelVo.getNumber());
-                projectDocument.setTitle(projectDocumentOutputExcelVo.getTitle());
+                String number = projectDocumentOutputExcelVo.getNumber();
+                if (number == null || number.length() == 0){
+                    number = "/";
+                    projectDocument.setNumber(number);
+                }else {
+                    projectDocument.setNumber(number);
+                }
+
+                String title = projectDocumentOutputExcelVo.getTitle();
+                if (title == null || title.length() == 0){
+                    title = "/";
+                    projectDocument.setTitle(title);
+                }else {
+                    projectDocument.setTitle(title);
+                }
+
                 projectDocument.setPageNumber(projectDocumentOutputExcelVo.getPageNumber());
                 projectDocument.setResponsiblePerson(projectDocumentOutputExcelVo.getResponsiblePerson());
                 projectDocument.setKeepTime("永久");
@@ -328,7 +342,7 @@ public class ProjectDocumentController {
                 projectDocumentMapper.insertSelective(projectDocument);
 //                取出projectDocument的id
                 int pprojectDocumentId = projectDocumentMapper.findIdByBoxIdNumberTitle(projectBoxId,
-                        projectDocumentOutputExcelVo.getNumber(), projectDocumentOutputExcelVo.getTitle());
+                        number, title);
 //                找到对应的文件夹，将里面的图片复制到指定的文件夹，并创建对应content
 //                创建序号变量，用于查找对应文件夹
                 String xuHao = projectDocumentOutputExcelVo.getId().toString();
