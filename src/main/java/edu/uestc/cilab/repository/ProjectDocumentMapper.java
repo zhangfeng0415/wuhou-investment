@@ -171,5 +171,5 @@ public interface ProjectDocumentMapper {
             "SELECT id FROM project_document WHERE project_box_id = #{projectBoxId, jdbcType=INTEGER} ",
             " AND number = #{number, jdbcType=VARCHAR} AND title = #{title, jdbcType=VARCHAR}  "
     })
-    int findIdByBoxIdNumberTitle(@Param("projectBoxId")Integer projectBoxId, @Param("number")String number, @Param("title")String title);
+    List<Integer> findIdByBoxIdNumberTitle(@Param("projectBoxId")Integer projectBoxId, @Param("number")String number, @Param("title")String title);
 }

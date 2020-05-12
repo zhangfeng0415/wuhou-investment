@@ -341,8 +341,11 @@ public class ProjectDocumentController {
 //                插入数据
                 projectDocumentMapper.insertSelective(projectDocument);
 //                取出projectDocument的id
-                int pprojectDocumentId = projectDocumentMapper.findIdByBoxIdNumberTitle(projectBoxId,
+                List<Integer> projectDocumentIdList = projectDocumentMapper.findIdByBoxIdNumberTitle(projectBoxId,
                         number, title);
+                if (projectDocumentIdList.size() != 1){
+                    return new ResultUtil(ResponseConstant.ResponseCode.FAILURE,projectBoxFile.getName()+"文件夹中存在文号与题名重复的条目，请删除该文档盒并修改后重新导入",null);
+                }
 //                找到对应的文件夹，将里面的图片复制到指定的文件夹，并创建对应content
 //                创建序号变量，用于查找对应文件夹
                 String xuHao = projectDocumentOutputExcelVo.getId().toString();
@@ -356,7 +359,7 @@ public class ProjectDocumentController {
                         for (String imageFilePath : imageFilePathList ){
 //                            插入对应图片数据
                             ProjectContent projectContent = new ProjectContent();
-                            projectContent.setProjectDocumentId(pprojectDocumentId);
+                            projectContent.setProjectDocumentId(projectDocumentIdList.get(0));
                             projectContent.setContentAddress(imageFilePath);
                             projectContentMapper.insertSelective(projectContent);
                         }

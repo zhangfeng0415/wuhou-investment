@@ -304,7 +304,11 @@ public class OfficialDocumentController {
 //                插入officialDocument数据
                 officialDocumentMapper.insertSelective(officialDocument);
 //                取出officialDocument的id
-                int officialDocumentId = officialDocumentMapper.findIdByBoxIdNumberTitle(officialBoxId, number, title);
+                List<Integer> officialDocumentIdList = officialDocumentMapper.findIdByBoxIdNumberTitle(officialBoxId, number, title);
+                if (officialDocumentIdList.size() != 1){
+//                    说明存在文号与题名重复
+                    return new ResultUtil(ResponseConstant.ResponseCode.FAILURE,officialBoxFile.getName()+"文件夹中存在文号与题名重复的条目，请删除该文档盒并修改后重新导入",null);
+                }
 //                找到对应的文件夹，将里面的图片复制到指定的文件夹，并创建对应content
 //                创建序号变量，用于查找对应文件夹
                 String xuHao = officialDocumentOutputExcelVo.getId().toString();
@@ -318,7 +322,7 @@ public class OfficialDocumentController {
                         for (String imageFilePath : imageFilePathList ){
 //                            插入对应图片数据
                             OfficialContent officialContent = new OfficialContent();
-                            officialContent.setOfficialDocumentId(officialDocumentId);
+                            officialContent.setOfficialDocumentId(officialDocumentIdList.get(0));
                             officialContent.setContentAddress(imageFilePath);
                             officialContentMapper.insertSelective(officialContent);
                         }

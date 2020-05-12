@@ -161,5 +161,5 @@ public interface OfficialDocumentMapper {
             "SELECT id FROM official_document WHERE official_box_id = #{officialBoxId, jdbcType=INTEGER} ",
             " AND number = #{number, jdbcType=VARCHAR} AND title = #{title, jdbcType=VARCHAR}  "
     })
-    int findIdByBoxIdNumberTitle(@Param("officialBoxId")Integer officialBoxId, @Param("number")String number, @Param("title")String title);
+    List<Integer> findIdByBoxIdNumberTitle(@Param("officialBoxId")Integer officialBoxId, @Param("number")String number, @Param("title")String title);
 }

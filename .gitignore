@@ -1,7 +1,7 @@
 #忽略target目录
 /target/
 #忽略idea文件
-/wuhou-investment.iml/
+/wuhou-investment.iml
 /.idea/
 sql/
 src/main/test/
