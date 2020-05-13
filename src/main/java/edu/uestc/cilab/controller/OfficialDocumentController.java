@@ -297,9 +297,17 @@ public class OfficialDocumentController {
                     officialDocument.setTitle(title);
                 }
                 officialDocument.setPageNumber(officialDocumentOutputExcelVo.getPageNumber());
-                officialDocument.setResponsiblePerson(officialDocumentOutputExcelVo.getResponsiblePerson());
+                if (officialDocumentOutputExcelVo.getResponsiblePerson() == null){
+                    officialDocument.setResponsiblePerson("/");
+                } else {
+                    officialDocument.setResponsiblePerson(officialDocumentOutputExcelVo.getResponsiblePerson());
+                }
                 officialDocument.setKeepTime("永久");
-                officialDocument.setDocumentTime(officialDocumentOutputExcelVo.getDocumentTime());
+                if (officialDocumentOutputExcelVo.getDocumentTime() == null){
+                    officialDocument.setDocumentTime("/");
+                } else {
+                    officialDocument.setDocumentTime(officialDocumentOutputExcelVo.getDocumentTime());
+                }
                 officialDocument.setCreateUserName("录入员");
 //                插入officialDocument数据
                 officialDocumentMapper.insertSelective(officialDocument);

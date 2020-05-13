@@ -334,9 +334,17 @@ public class ProjectDocumentController {
                 }
 
                 projectDocument.setPageNumber(projectDocumentOutputExcelVo.getPageNumber());
-                projectDocument.setResponsiblePerson(projectDocumentOutputExcelVo.getResponsiblePerson());
+                if (projectDocumentOutputExcelVo.getResponsiblePerson() == null){
+                    projectDocument.setResponsiblePerson("/");
+                }else {
+                    projectDocument.setResponsiblePerson(projectDocumentOutputExcelVo.getResponsiblePerson());
+                }
                 projectDocument.setKeepTime("永久");
-                projectDocument.setDocumentTime(projectDocumentOutputExcelVo.getDocumentTime());
+                if (projectDocumentOutputExcelVo.getDocumentTime() == null){
+                    projectDocument.setDocumentTime("/");
+                } else {
+                    projectDocument.setDocumentTime(projectDocumentOutputExcelVo.getDocumentTime());
+                }
                 projectDocument.setCreateUserName("录入员");
 //                插入数据
                 projectDocumentMapper.insertSelective(projectDocument);
@@ -344,7 +352,7 @@ public class ProjectDocumentController {
                 List<Integer> projectDocumentIdList = projectDocumentMapper.findIdByBoxIdNumberTitle(projectBoxId,
                         number, title);
                 if (projectDocumentIdList.size() != 1){
-                    return new ResultUtil(ResponseConstant.ResponseCode.FAILURE,projectBoxFile.getName()+"文件夹中存在文号与题名重复的条目，请删除该文档盒并修改后重新导入",null);
+                    return new ResultUtil(ResponseConstant.ResponseCode.FAILURE,projectBoxFile.getName()+"文件夹中存在文件编号与题名重复的条目，请删除该文档盒并修改后重新导入",null);
                 }
 //                找到对应的文件夹，将里面的图片复制到指定的文件夹，并创建对应content
 //                创建序号变量，用于查找对应文件夹
